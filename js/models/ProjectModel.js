@@ -2,43 +2,27 @@
 define(['underscore', 'backbone', 'lockr'],
  function(_, Backbone, Lockr){
    var ProjectModel = Backbone.Model.extend({
-      initialize: function(url){
-         if ( !Lockr.get('projects') ){
-            this.getProjectData();
-            this.searchProjects();
-         }
+      urlRoot: "http://localhost:5465",
+      url: function(){
+         var url = this.urlRoot + this.urlEnding;
+         return url;
       },
-      getProjectData: function(){
-         $.ajax({
-            url: 'http://localhost:5465/api/projects',
-            success: function(data) {
-               Lockr.set("projects", data);
-            }
-         }).fail(function (err) {
-            reject(Error("It broke"));
-         })
+      initialize: function(urlEnding) {
+         this.urlEnding = urlEnding;
       },
-      searchProjects: function(url){
-         $.ajax({
-            url: url,
-            success: function(res) {
-               var arr = [];
-               $.each(res.data, function(idx, val){
-
-                  var result = $.grep(Lockr.get('projects').data, function(e){
-                     return e.id === val.id;
-                  });
-                  var finalObj = $.extend(val, result[0]);
-                  arr.push(finalObj);
-               });
-               this.finalArr = arr;
-            }
-         }).fail(function (err) {
-            reject(Error("It broke"));
-         })
+      searchProjects: function(urlEnding) {
+         this.urlEnding = urlEnding;
       },
-      getFinalArr: function(){
-         return this.finalArr;
+      combineData: function(res) {
+         var arr = [];
+         $.each(res.data, function(idx, val){
+            var result = $.grep(Lockr.get('projects').data, function(e){
+               return e.id === val.id;
+            });
+            var finalObj = $.extend(val, result[0]);
+            arr.push(finalObj);
+         });
+         this.attributes = {"data": arr}
       }
    });
    return ProjectModel;
